@@ -1,0 +1,92 @@
+﻿@page "/radius"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using DataStore.Models
+@using DataStore
+
+<h3>Radius Configuration</h3>
+<div class="col-6">
+    <EditForm Model="@radiusSettings" OnValidSubmit="SaveSettings" FormName="Radius">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>Active</label>
+            <InputSelect id="active" class="form-control" @bind-Value="radiusSettings!.Active">
+                @foreach (ActiveRadius activeRadius in Enum.GetValues(typeof(ActiveRadius)))
+                {
+                    <option value="@activeRadius">@activeRadius.ToString()</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-group">
+            <label>IP Address</label>
+            <InputText id="ipAddress" class="form-control" @bind-Value="radiusSettings!.IPAddress" />
+            <ValidationMessage For="@(() => radiusSettings.IPAddress)" />
+        </div>
+
+        <div class="form-group">
+            <label>Authentication Mode</label>
+            <InputSelect id="authMode" class="form-control" @bind-Value="radiusSettings!.AuthentificationMode">
+                @foreach (AuthentificationMode mode in Enum.GetValues(typeof(AuthentificationMode)))
+                {
+                    <option value="@mode">@mode.ToString()</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-group">
+            <label>Shared Secret</label>
+            <InputText id="sharedSecret" class="form-control" @bind-Value="radiusSettings!.SharedSecret" />
+            <ValidationMessage For="@(() => radiusSettings.SharedSecret)" />
+        </div>
+
+        <div style="margin-top:10px">
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </EditForm>
+</div>
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success mt-3">@successMessage</div>
+}
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+
+
+@code {
+    private DataStore.DbStore Store = new DbStore();
+    private DataStore.Models.Radius? radiusSettings;
+    private string? successMessage;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        radiusSettings = await Store.GetRadiusAsync(1);
+    }
+
+    private async void SaveSettings()
+    {
+        if (IsValidIpAddress(radiusSettings!.IPAddress))
+        {
+            await Store.UpdateRadiusAsync(radiusSettings);
+            successMessage = "Radius settings have been updated.";
+            errorMessage = null;
+        }
+        else
+        {
+            errorMessage = "Invalid IP address.";
+            successMessage = null;
+        }
+    }
+
+    private bool IsValidIpAddress(string ipAddress)
+    {
+        return System.Net.IPAddress.TryParse(ipAddress, out _);
+    }
+}

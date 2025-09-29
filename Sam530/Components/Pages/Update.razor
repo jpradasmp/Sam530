@@ -1,0 +1,122 @@
+﻿@page "/upload"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+
+<h3>Application Update</h3>
+
+<div class="col-6">
+    <!-- Selector de archivo -->
+    <div class="form-group">
+        <label>Select a .gz file:</label>
+        <InputFile OnChange="@(e => OnFileSelected(e))" accept=".gz" />
+    </div>
+
+    @if (!string.IsNullOrEmpty(selectedFileName))
+    {
+        <div class="mt-2">Selected: <b>@selectedFileName</b></div>
+    }
+
+    <div style="margin-top:10px">
+        <button type="button" class="btn btn-primary" @onclick="HandleUpload" disabled="@(selectedFile is null)">
+            Upload
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success mt-3">@successMessage</div>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+
+@code {
+    private IBrowserFile? selectedFile;
+    private string? selectedFileName;
+    private string? successMessage;
+    private string? errorMessage;
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        successMessage = null;
+        errorMessage = null;
+
+        var file = e.File;
+        if (file != null && file.Name.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+        {
+            selectedFile = file;
+            selectedFileName = file.Name;
+        }
+        else
+        {
+            selectedFile = null;
+            selectedFileName = null;
+            errorMessage = "Only .gz files are allowed.";
+        }
+    }
+
+    private async Task HandleUpload()
+    {
+        if (selectedFile == null)
+        {
+            errorMessage = "Please select a valid .gz file.";
+            return;
+        }
+
+        try
+        {
+            var uploadsFolder = Path.Combine(Environment.CurrentDirectory, "Uploads");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var filePath = Path.Combine(uploadsFolder, selectedFile.Name);
+
+            // Guardar archivo
+            await using var stream = selectedFile.OpenReadStream(maxAllowedSize: 200 * 1024 * 1024); // 200 MB
+            await using var fileStream = File.Create(filePath);
+            await stream.CopyToAsync(fileStream);
+
+            // Validación del archivo
+            if (ValidateFile(filePath))
+            {
+                successMessage = $"File uploaded and validated successfully: {selectedFile.Name}";
+                errorMessage = null;
+            }
+            else
+            {
+                errorMessage = $"The uploaded file {selectedFile.Name} is not valid.";
+                successMessage = null;
+
+                // Borrar si es inválido
+                if (File.Exists(filePath)) File.Delete(filePath);
+            }
+
+            // Reset
+            selectedFile = null;
+            selectedFileName = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Upload failed: {ex.Message}";
+            successMessage = null;
+        }
+    }
+
+    private bool ValidateFile(string filePath)
+    {
+        try
+        {
+            var fi = new FileInfo(filePath);
+            if (!fi.Exists) return false;
+            if (!fi.Extension.Equals(".gz", StringComparison.OrdinalIgnoreCase)) return false;
+            if (fi.Length < 1024) return false; // mínimo 1 KB
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
