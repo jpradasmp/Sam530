@@ -1,0 +1,14 @@
+﻿@page "/logout"
+@inject Sam530.Services.RadiusService AuthService
+@inject NavigationManager Navigation
+
+<h3>Saliendo...</h3>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Yield();
+        await Task.Run(() => AuthService.Logout());
+        Navigation.NavigateTo("/login", true);
+    }
+}

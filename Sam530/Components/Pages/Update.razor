@@ -1,6 +1,11 @@
 ﻿@page "/upload"
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Forms
+@using Sam530.Services
+@using SharpCompress.Archives
+@inject IUploadValidatorService ValidatorService
+
+
 
 <h3>Application Update</h3>
 
@@ -21,7 +26,18 @@
             Upload
         </button>
     </div>
+
 </div>
+
+@if (isUploading)
+{
+    <div class="d-flex align-items-center mt-3">
+        <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
+            <span class="visually-hidden">Uploading...</span>
+        </div>
+        <span class="ms-2">Uploading file, please wait...</span>
+    </div>
+}
 
 @if (!string.IsNullOrEmpty(successMessage))
 {
@@ -34,10 +50,12 @@
 }
 
 @code {
+
     private IBrowserFile? selectedFile;
     private string? selectedFileName;
     private string? successMessage;
     private string? errorMessage;
+    private bool isUploading = false;
 
     private void OnFileSelected(InputFileChangeEventArgs e)
     {
@@ -66,6 +84,9 @@
             return;
         }
 
+        isUploading = true;
+        StateHasChanged();
+
         try
         {
             var uploadsFolder = Path.Combine(Environment.CurrentDirectory, "Uploads");
@@ -75,8 +96,11 @@
 
             // Guardar archivo
             await using var stream = selectedFile.OpenReadStream(maxAllowedSize: 200 * 1024 * 1024); // 200 MB
-            await using var fileStream = File.Create(filePath);
-            await stream.CopyToAsync(fileStream);
+            
+            await using (var fileStream = File.Create(filePath))
+            {
+                await stream.CopyToAsync(fileStream);
+            }
 
             // Validación del archivo
             if (ValidateFile(filePath))
@@ -102,6 +126,11 @@
             errorMessage = $"Upload failed: {ex.Message}";
             successMessage = null;
         }
+        finally
+        {
+            isUploading = false;
+            StateHasChanged();
+        }
     }
 
     private bool ValidateFile(string filePath)
@@ -112,7 +141,28 @@
             if (!fi.Exists) return false;
             if (!fi.Extension.Equals(".gz", StringComparison.OrdinalIgnoreCase)) return false;
             if (fi.Length < 1024) return false; // mínimo 1 KB
-            return true;
+
+            // Lista de ficheros que deben existir dentro del paquete
+            var requiredFiles = new[]
+            {
+            "appsettings.json",
+            "Netpoint.dll",
+            "lib/somelib.so"
+            };
+
+            var foundFiles = new HashSet<string?>(StringComparer.OrdinalIgnoreCase);
+
+            // Abrimos el archivo tar.gz
+            using var stream = File.OpenRead(filePath);
+            using var archive = ArchiveFactory.Open(stream);
+
+            var filesInArchive = archive.Entries
+           .Where(e => !e.IsDirectory)
+           .Select(e => e.Key?.Replace("\\", "/")) // Normalizamos separadores
+           .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            // Validamos que todos los requeridos estén presentes
+            return requiredFiles.All(req => foundFiles.Contains(req));
         }
         catch
         {

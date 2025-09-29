@@ -2,6 +2,8 @@ using Sam530.Components;
 using Sam530.Services;
 using NLog;
 using NLog.Web;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
 
 
 
@@ -17,6 +19,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddHttpContextAccessor();
+
+// Autenticación por cookies
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login";
+        options.LogoutPath = "/logout";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(20); // Ajusta la duración aquí
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorizationCore();
+
 // NLog: Setup NLog for Dependency injection
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
@@ -29,9 +45,14 @@ builder.Services.AddSingleton<SyslogService>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<SyslogService>());
 builder.Services.AddSingleton<RadiusService>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<RadiusService>());
+builder.Services.AddScoped<IUploadValidatorService, UploadValidatorService>();
 
 
 var app = builder.Build();
+
+// Middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

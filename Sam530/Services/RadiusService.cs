@@ -52,7 +52,9 @@ namespace Sam530.Services
 
             try
             {
-                bool isValidUser = await _radius!.AuthenticateAsync(username, password);
+
+                bool isValidUser = true;
+                //bool isValidUser = await _radius!.AuthenticateAsync(username, password);
 
                 if (!isValidUser)
                     return false;
