@@ -1,0 +1,50 @@
+﻿@page
+@model LoginModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Iniciar sesión</title>
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center vh-100">
+
+    <div class="card shadow p-4" style="min-width: 350px;">
+        <h4 class="text-center mb-4">Login session</h4>
+
+        <form method="post">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="ReturnUrl" value="@Request.Query["ReturnUrl"]" /> <!--Save origin URL-->
+
+            <div class="mb-3">
+                <label for="Username" class="form-label">User</label>
+                <input type="text" name="Username" class="form-control" id="Username" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="Password" class="form-label">Pasword</label>
+                <input type="password" name="Password" class="form-control" id="Password" required />
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+        </form>
+    </div>
+        
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+</body>
+</html>
+

@@ -16,6 +16,7 @@ logger.Debug("init main");
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddRazorPages();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -25,12 +26,13 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/login";
+        options.LoginPath = "/Login";
         options.LogoutPath = "/logout";
         options.ExpireTimeSpan = TimeSpan.FromMinutes(20); // Ajusta la duración aquí
         options.SlidingExpiration = true;
     });
 
+builder.Services.AddAuthorization();
 builder.Services.AddAuthorizationCore();
 
 // NLog: Setup NLog for Dependency injection
@@ -57,6 +59,8 @@ app.MapGet("/health", () => Results.Ok("Alive"));
 // Middleware
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapRazorPages();
+app.MapBlazorHub();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
