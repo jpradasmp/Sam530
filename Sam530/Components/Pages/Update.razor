@@ -96,14 +96,14 @@
 
             // Guardar archivo
             await using var stream = selectedFile.OpenReadStream(maxAllowedSize: 200 * 1024 * 1024); // 200 MB
-            
+
             await using (var fileStream = File.Create(filePath))
             {
                 await stream.CopyToAsync(fileStream);
             }
 
             // Validación del archivo
-            if (ValidateFile(filePath))
+            if (await ValidateFile())
             {
                 successMessage = $"File uploaded and validated successfully: {selectedFile.Name}";
                 errorMessage = null;
@@ -113,7 +113,7 @@
                 errorMessage = $"The uploaded file {selectedFile.Name} is not valid.";
                 successMessage = null;
 
-                // Borrar si es inválido
+                // Borrar si no es inválido
                 if (File.Exists(filePath)) File.Delete(filePath);
             }
 
@@ -133,40 +133,26 @@
         }
     }
 
-    private bool ValidateFile(string filePath)
+    private async Task<bool> ValidateFile()
     {
         try
         {
-            var fi = new FileInfo(filePath);
-            if (!fi.Exists) return false;
-            if (!fi.Extension.Equals(".gz", StringComparison.OrdinalIgnoreCase)) return false;
-            if (fi.Length < 1024) return false; // mínimo 1 KB
 
-            // Lista de ficheros que deben existir dentro del paquete
+            // Lista de ficheros requeridos (ejemplo)
             var requiredFiles = new[]
             {
-            "appsettings.json",
-            "Netpoint.dll",
-            "lib/somelib.so"
+            "publish/Sam530.dll",
+            "publish/Sam530Core.dll"
             };
 
-            var foundFiles = new HashSet<string?>(StringComparer.OrdinalIgnoreCase);
+            var result =  await ValidatorService.ValidateAsync(selectedFile!, requiredFiles);
+            return result.IsValid;
 
-            // Abrimos el archivo tar.gz
-            using var stream = File.OpenRead(filePath);
-            using var archive = ArchiveFactory.Open(stream);
-
-            var filesInArchive = archive.Entries
-           .Where(e => !e.IsDirectory)
-           .Select(e => e.Key?.Replace("\\", "/")) // Normalizamos separadores
-           .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            // Validamos que todos los requeridos estén presentes
-            return requiredFiles.All(req => foundFiles.Contains(req));
         }
         catch
         {
             return false;
         }
     }
+
 }

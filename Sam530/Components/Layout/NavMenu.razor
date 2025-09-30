@@ -1,9 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
+@inject Sam530.Services.AppInfoService AppInfo
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Boston SAM530</a>
+        <a class="navbar-brand" href="">Boston SAM530 @AppInfo.GetVersion()</a>
     </div>
 </div>
 

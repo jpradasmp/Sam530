@@ -46,6 +46,7 @@ builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<Syslog
 builder.Services.AddSingleton<RadiusService>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<RadiusService>());
 builder.Services.AddScoped<IUploadValidatorService, UploadValidatorService>();
+builder.Services.AddSingleton<AppInfoService>();
 
 
 var app = builder.Build();

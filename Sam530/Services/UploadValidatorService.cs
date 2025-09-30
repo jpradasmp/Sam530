@@ -11,29 +11,42 @@ namespace Sam530.Services
 
     public class UploadValidatorService : IUploadValidatorService
     {
-        public async Task<(bool IsValid, string Message)> ValidateAsync(IBrowserFile file, IEnumerable<string> requiredFiles)
+        public async Task<(bool IsValid, string Message)> ValidateAsync(
+        IBrowserFile file,
+        IEnumerable<string> requiredFiles)
         {
             var tempPath = Path.GetTempFileName();
 
             try
             {
-                // Guardamos el archivo temporalmente
+                // Guardamos el archivo .gz en temp
                 await using (var fs = File.Create(tempPath))
                 {
                     await file.OpenReadStream(maxAllowedSize: 200 * 1024 * 1024).CopyToAsync(fs);
                 }
 
-                // Abrimos con SharpCompress
                 using var stream = File.OpenRead(tempPath);
-                using var archive = ArchiveFactory.Open(stream);
+                using var gzArchive = ArchiveFactory.Open(stream);
 
-                var foundFiles = new HashSet<string?>(
-                    archive.Entries
-                           .Where(e => !e.IsDirectory)
-                           .Select(e => e.Key),
+                // El gz debería contener un único tar
+                var tarEntry = gzArchive.Entries.FirstOrDefault(e => !e.IsDirectory);
+                if (tarEntry == null)
+                {
+                    return (false, "❌ El archivo .gz no contiene ningún .tar.");
+                }
+
+                using var tarStream = new MemoryStream();
+                tarEntry.WriteTo(tarStream);
+                tarStream.Position = 0;
+
+                using var tarArchive = ArchiveFactory.Open(tarStream);
+
+                var foundFiles = new HashSet<string>(
+                    tarArchive.Entries
+                              .Where(e => !e.IsDirectory)
+                              .Select(e => e.Key!.Replace("\\", "/")),
                     StringComparer.OrdinalIgnoreCase);
 
-                // Comprobamos que estén todos los ficheros requeridos
                 var missing = requiredFiles.Where(req => !foundFiles.Contains(req)).ToList();
 
                 if (missing.Count == 0)
