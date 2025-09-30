@@ -1,0 +1,48 @@
+[Unit]
+Description=SAM530 Web and Service
+
+[Service]
+# will set the Current Working Directory (CWD)
+WorkingDirectory=/usr/local/sam530/service
+
+# systemd will run this executable to start the service
+ExecStartPre=/usr/local/sam530/funcompress.sh
+ExecStartPre=/usr/local/sam530/fapply.sh
+ExecStart=/root/.dotnet/dotnet /usr/local/sam530/service/Sam530.dll
+
+# to query logs using journalctl, set a logical name here  
+SyslogIdentifier=Sam530
+
+# Use your username to keep things simple, for production scenario's I recommend a dedicated user/group.
+# If you pick a different user, make sure dotnet and all permissions are set correctly to run the app.
+# To update permissions, use 'chown yourusername -R /srv/AspNetSite' to take ownership of the folder and files,
+#       Use 'chmod +x /srv/AspNetSite/AspNetSite' to allow execution of the executable file.
+User=root
+
+# ensure the service restarts after crashing
+Restart=always
+# Restart service after 10 seconds if the dotnet service crashes:
+RestartSec=10
+
+# copied from dotnet documentation at
+# https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-nginx?view=aspnetcore-3.1#code-try-7
+KillSignal=SIGINT
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true
+
+# This environment variable is necessary when dotnet isn't loaded for the specified user.
+# To figure out this value, run 'env | grep DOTNET_ROOT' when dotnet has been loaded into your shell.
+Environment=DOTNET_ROOT=/root/.dotnet
+
+
+# If you need to run multiple services on different ports set
+# the ports environment variable here:
+Environment=ASPNETCORE_URLS=http://+:80
+
+# give the executed process the CAP_NET_BIND_SERVICE capability. This capability allows the process to bind to well known ports.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+

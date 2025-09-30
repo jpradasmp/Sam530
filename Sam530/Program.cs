@@ -47,9 +47,12 @@ builder.Services.AddSingleton<RadiusService>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<RadiusService>());
 builder.Services.AddScoped<IUploadValidatorService, UploadValidatorService>();
 builder.Services.AddSingleton<AppInfoService>();
+builder.Services.AddSingleton<ShutdownService>();
 
 
 var app = builder.Build();
+
+app.MapGet("/health", () => Results.Ok("Alive"));
 
 // Middleware
 app.UseAuthentication();

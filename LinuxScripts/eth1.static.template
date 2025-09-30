@@ -1,0 +1,8 @@
+auto eth1
+allow-hotplug
+iface eth1 inet static
+address [ADDRESS]
+netmask [SUBNET]
+gateway [GATEWAY]
+dns-nameservers 8.8.8.8
+

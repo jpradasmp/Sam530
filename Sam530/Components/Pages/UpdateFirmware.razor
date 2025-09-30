@@ -2,12 +2,12 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Forms
 @using Sam530.Services
-@using SharpCompress.Archives
+@inject ShutdownService ShutdownService
 @inject IUploadValidatorService ValidatorService
-
-
+@inject IJSRuntime JS
 
 <h3>Application Update</h3>
+<h4>This option allows updating the Sam530 Linux Service.</h4>
 
 <div class="col-6">
     <!-- Selector de archivo -->
@@ -26,7 +26,6 @@
             Upload
         </button>
     </div>
-
 </div>
 
 @if (isUploading)
@@ -41,7 +40,18 @@
 
 @if (!string.IsNullOrEmpty(successMessage))
 {
-    <div class="alert alert-success mt-3">@successMessage</div>
+    <div class="alert alert-success mt-3"><pre>@successMessage</pre></div>
+
+    <!-- Botón de restart -->
+    <button class="btn btn-danger mt-3" @onclick="RestartService">Restart Service</button>
+
+    <!-- Barra de progreso -->
+    <div class="progress mt-3" style="height: 30px;">
+        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+        role="progressbar" style="width:0%">
+            0%
+        </div>
+    </div>
 }
 
 @if (!string.IsNullOrEmpty(errorMessage))
@@ -49,8 +59,9 @@
     <div class="alert alert-danger mt-3">@errorMessage</div>
 }
 
-@code {
+<script src="js/restartProgress.js"></script>
 
+@code {
     private IBrowserFile? selectedFile;
     private string? selectedFileName;
     private string? successMessage;
@@ -92,12 +103,11 @@
             var uploadsFolder = Path.Combine(Environment.CurrentDirectory, "Uploads");
             Directory.CreateDirectory(uploadsFolder);
 
-            var filePath = Path.Combine(uploadsFolder, selectedFile.Name);
+            // Guardar inicialmente con el nombre original en una ruta temporal
+            var tempFilePath = Path.Combine(uploadsFolder, selectedFile.Name);
 
-            // Guardar archivo
             await using var stream = selectedFile.OpenReadStream(maxAllowedSize: 200 * 1024 * 1024); // 200 MB
-
-            await using (var fileStream = File.Create(filePath))
+            await using (var fileStream = File.Create(tempFilePath))
             {
                 await stream.CopyToAsync(fileStream);
             }
@@ -105,7 +115,19 @@
             // Validación del archivo
             if (await ValidateFile())
             {
-                successMessage = $"File uploaded and validated successfully: {selectedFile.Name}";
+                // Ruta definitiva con nombre fijo
+                var finalFilePath = Path.Combine(uploadsFolder, "Sam530.gz");
+
+                // Si ya existe uno anterior, lo borramos
+                if (File.Exists(finalFilePath))
+                {
+                    File.Delete(finalFilePath);
+                }
+
+                // Renombrar el archivo válido al nombre fijo
+                File.Move(tempFilePath, finalFilePath);
+
+                successMessage = $"File uploaded and validated successfully.\nPress restart service to apply changes.\nDuring update process, communication will be lost for some minutes.\nBe patient, main page will be loaded on process end.";
                 errorMessage = null;
             }
             else
@@ -113,11 +135,11 @@
                 errorMessage = $"The uploaded file {selectedFile.Name} is not valid.";
                 successMessage = null;
 
-                // Borrar si no es inválido
-                if (File.Exists(filePath)) File.Delete(filePath);
+                // Borrar si no es válido
+                if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
             }
 
-            // Reset
+            // Reset selección
             selectedFile = null;
             selectedFileName = null;
         }
@@ -133,21 +155,19 @@
         }
     }
 
+
     private async Task<bool> ValidateFile()
     {
         try
         {
-
-            // Lista de ficheros requeridos (ejemplo)
             var requiredFiles = new[]
             {
-            "publish/Sam530.dll",
-            "publish/Sam530Core.dll"
+                "publish/Sam530.dll",
+                "publish/Sam530Core.dll"
             };
 
-            var result =  await ValidatorService.ValidateAsync(selectedFile!, requiredFiles);
+            var result = await ValidatorService.ValidateAsync(selectedFile!, requiredFiles);
             return result.IsValid;
-
         }
         catch
         {
@@ -155,4 +175,22 @@
         }
     }
 
+    private async Task RestartService()
+    {
+        try
+        {
+            // 🔹 Aquí deberías invocar a tu backend que hace el restart real
+            // await SomeBackendApi.RestartAsync
+
+            // 🔹 Lanza progreso en cliente
+            await JS.InvokeVoidAsync("restartProgress.startPolling", "/health");
+
+            ShutdownService.Stop();
+
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Restart failed: {ex.Message}";
+        }
+    }
 }

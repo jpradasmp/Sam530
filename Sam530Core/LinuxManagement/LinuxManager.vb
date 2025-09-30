@@ -23,7 +23,7 @@ Public Class LinuxManager
     ''' <returns></returns>
     Private Shared Property _logger As ILogger
 
-    Public Const FACTORY_IP As String = "192.168.1.119"
+    Public Const FACTORY_IP As String = "192.168.1.117"
     Public Const FACTORY_NETMASK As String = "255.255.255.1"
     Public Const FACTORY_GATEWAY As String = "192.168.1.1"
 
@@ -213,10 +213,11 @@ Public Class LinuxManager
 
     Public Shared Function Set_eth0(NetworkSetup As Setups) As Boolean
         'Adjust Ip and Gateway (Only Linux System)
-        If RuntimeInformation.IsOSPlatform(OSPlatform.Linux) Then
 
-            Dim Template = Path.Combine(Settings.FirmwarePath, "eth0.static.template")
-            Dim iface = Path.Combine(Settings.FirmwarePath, "eth0")
+        If RuntimeInformation.IsOSPlatform(OSPlatform.Linux) Then
+            _logger.LogInformation($"Linux: Updating IP Address. Firmware Path is {Settings.FirmwarePath}")
+            Dim Template = Path.Combine(Settings.FirmwarePath, "eth1.static.template")
+            Dim iface = Path.Combine(Settings.FirmwarePath, "eth1")
             Dim Fr As New FileStream(Template, FileMode.Open)
             Dim Fw As New FileStream(iface, FileMode.Create)
             Dim Sr As New StreamReader(Fr)
@@ -235,6 +236,7 @@ Public Class LinuxManager
             LinuxManager.CopyInterface(iface)
             Return True
         Else
+            _logger.LogError($"In windows IP Address can't be set")
             Return False
         End If
 

@@ -2,6 +2,17 @@
 @inject NavigationManager Navigation
 @inject Sam530.Services.AppInfoService AppInfo
 
+@*
+    Per fer icones. Cal definir-les a NavMenu.razor.css
+    1.- Son icones de bootstrap. Cal anar a https://icons.getbootstrap.com/icons/ per buscar la que necessitem.
+    2.- Copiem el HTML que fa servir svg
+    3.- Anem a la web de conversió https://yoksel.github.io/url-encoder/
+    4.- Enganxem la còpia a 'Insert SVG'
+    5.- El Ready for CSS és el codi que necessitem per crear la nova classe a NavMenu.razor.css
+*@
+
+
+
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Boston SAM530 @AppInfo.GetVersion()</a>
