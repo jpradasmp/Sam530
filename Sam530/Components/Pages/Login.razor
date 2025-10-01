@@ -7,7 +7,7 @@
 @inject RadiusService AuthService
 @inject NavigationManager Navigation
 
-<h3>Iniciar sesión</h3>
+<h3>Login</h3>
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
@@ -18,16 +18,16 @@
     <DataAnnotationsValidator />
     <ValidationSummary />
     <div class="mb-3">
-        <label for="username" class="form-label">Usuario</label>
+        <label for="username" class="form-label">User</label>
         <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
         <ValidationMessage For="@(() => loginModel.Username)" />
     </div>
     <div class="mb-3">
-        <label for="password" class="form-label">Contraseña</label>
+        <label for="password" class="form-label">Password</label>
         <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
         <ValidationMessage For="@(() => loginModel.Password)" />
     </div>
-    <button class="btn btn-primary" type="submit">Entrar</button>
+    <button class="btn btn-primary" type="submit">Sign in</button>
 </EditForm>
 
 @inject UserSessionService Session
@@ -37,10 +37,10 @@
 
     public class LoginModel
     {
-       // [Required(ErrorMessage = "User is mandatory")]
+        [Required(ErrorMessage = "User is mandatory")]
         public string Username { get; set; } = string.Empty;
 
-      //  [Required(ErrorMessage = "Password is mandatory")]
+        [Required(ErrorMessage = "Password is mandatory")]
         public string Password { get; set; } = string.Empty;
     }
 
@@ -54,7 +54,7 @@
         }
         else
         {
-            errorMessage = "Usuario o contraseña incorrectos.";
+            errorMessage = "Wrong user or password";
         }
     }
 }
