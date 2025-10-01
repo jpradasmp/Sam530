@@ -2,64 +2,71 @@
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Forms
 @using Sam530.Services
+@using Sam530.Components.Shared
+
 @inject ShutdownService ShutdownService
 @inject IUploadValidatorService ValidatorService
 @inject IJSRuntime JS
 
-<h3>Application Update</h3>
-<h4>This option allows updating the Sam530 Linux Service.</h4>
 
-<div class="col-6">
-    <!-- Selector de archivo -->
-    <div class="form-group">
-        <label>Select a .gz file:</label>
-        <InputFile OnChange="@(e => OnFileSelected(e))" accept=".gz" />
+<ProtectedPage>
+    <h3>Application Update</h3>
+    <h4>This option allows updating the Sam530 Linux Service.</h4>
+
+    <div class="col-6">
+        <!-- Selector de archivo -->
+        <div class="form-group">
+            <label>Select a .gz file:</label>
+            <InputFile OnChange="@(e => OnFileSelected(e))" accept=".gz" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(selectedFileName))
+        {
+            <div class="mt-2">Selected: <b>@selectedFileName</b></div>
+        }
+
+        <div style="margin-top:10px">
+            <button type="button" class="btn btn-primary" @onclick="HandleUpload" disabled="@(selectedFile is null)">
+                Upload
+            </button>
+        </div>
     </div>
 
-    @if (!string.IsNullOrEmpty(selectedFileName))
+    @if (isUploading)
     {
-        <div class="mt-2">Selected: <b>@selectedFileName</b></div>
+        <div class="d-flex align-items-center mt-3">
+            <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
+                <span class="visually-hidden">Uploading...</span>
+            </div>
+            <span class="ms-2">Uploading file, please wait...</span>
+        </div>
     }
 
-    <div style="margin-top:10px">
-        <button type="button" class="btn btn-primary" @onclick="HandleUpload" disabled="@(selectedFile is null)">
-            Upload
-        </button>
-    </div>
-</div>
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success mt-3"><pre>@successMessage</pre></div>
 
-@if (isUploading)
-{
-    <div class="d-flex align-items-center mt-3">
-        <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
-            <span class="visually-hidden">Uploading...</span>
+        <!-- Botón de restart -->
+        <button class="btn btn-danger mt-3" @onclick="RestartService">Restart Service</button>
+
+        <!-- Barra de progreso -->
+        <div class="progress mt-3" style="height: 30px;">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+            role="progressbar" style="width:0%">
+                0%
+            </div>
         </div>
-        <span class="ms-2">Uploading file, please wait...</span>
-    </div>
-}
+    }
 
-@if (!string.IsNullOrEmpty(successMessage))
-{
-    <div class="alert alert-success mt-3"><pre>@successMessage</pre></div>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3">@errorMessage</div>
+    }
 
-    <!-- Botón de restart -->
-    <button class="btn btn-danger mt-3" @onclick="RestartService">Restart Service</button>
 
-    <!-- Barra de progreso -->
-    <div class="progress mt-3" style="height: 30px;">
-        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-        role="progressbar" style="width:0%">
-            0%
-        </div>
-    </div>
-}
+    <script src="js/restartProgress.js"></script>
 
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="alert alert-danger mt-3">@errorMessage</div>
-}
-
-<script src="js/restartProgress.js"></script>
+</ProtectedPage>
 
 @code {
     private IBrowserFile? selectedFile;

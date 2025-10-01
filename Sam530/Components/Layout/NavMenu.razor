@@ -24,39 +24,31 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
 
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="radius">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Radius
-                    </NavLink>
-                </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="radius">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Radius
+            </NavLink>
+        </div>
 
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="syslog">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Syslog
-                    </NavLink>
-                </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="syslog">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Syslog
+            </NavLink>
+        </div>
 
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="upload">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Update Firmware
-                    </NavLink>
-                </div>
-                <NavLink class="nav-link" href="/logout">
-                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Logout
-                </NavLink>
-            </Authorized>
-            <NotAuthorized>
-
-            </NotAuthorized>
-            <!-- Si quieres mostrar algo para no autenticados, puedes usar <NotAuthorized> -->
-        </AuthorizeView>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="upload">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Update Firmware
+            </NavLink>
+        </div>
+        <NavLink class="nav-link" href="/logout">
+            <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Logout
+        </NavLink>
        
 
     </nav>

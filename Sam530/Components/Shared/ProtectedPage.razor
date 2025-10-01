@@ -1,0 +1,36 @@
+﻿@using Sam530.Services
+
+@inject UserSessionService Session
+@inject NavigationManager Navigation
+
+@if (!isLoaded)
+{
+    <p>Cargando...</p>
+}
+else if (!Session.IsLoggedIn)
+{
+    @* Redirige a login *@
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    private bool isLoaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Session.RestoreAsync();
+            isLoaded = true;
+
+            if (!Session.IsLoggedIn)
+                Navigation.NavigateTo("/login", forceLoad: true);
+
+            StateHasChanged();
+        }
+    }
+}

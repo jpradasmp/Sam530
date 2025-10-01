@@ -52,39 +52,15 @@ namespace Sam530.Services
 
             try
             {
-
-                bool isValidUser = true;
+                await Task.Yield();
+                bool isValidUser = (username=="Masats" && password == "Admin1234");
                 //bool isValidUser = await _radius!.AuthenticateAsync(username, password);
 
                 if (!isValidUser)
                     return false;
 
-                var identity = new ClaimsIdentity(new[]
-                {
-            new Claim(ClaimTypes.Name, username)
-        }, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var user = new ClaimsPrincipal(identity);
-
-                _authState = Task.FromResult(new AuthenticationState(user));
-                NotifyAuthenticationStateChanged(_authState);
-
-                var httpContext = _httpContextAccessor.HttpContext;
-                if (httpContext is not null)
-                {
-                    await httpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        user,
-                        new AuthenticationProperties
-                        {
-                            IsPersistent = true,
-                            ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(90)
-                        });
-                }
-
-                _ = StartSessionTimer(1);
-
-                return true;
+                return isValidUser;
+                                                
             }
             catch (OperationCanceledException)
             {
@@ -99,19 +75,5 @@ namespace Sam530.Services
         }
 
 
-        public async Task StartSessionTimer(int Minutes)
-        {
-            await Task.Delay(TimeSpan.FromMinutes(Minutes));
-            Logout();
-        }
-
-        //Removes access after 90 minutes.
-        public async void Logout()
-        {
-            if (_httpContextAccessor.HttpContext != null)
-            {
-                await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            }
-        }
     }
 }

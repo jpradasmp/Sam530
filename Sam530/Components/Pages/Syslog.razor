@@ -1,10 +1,11 @@
-﻿@attribute [Authorize]
-@page "/syslog"
+﻿@page "/syslog"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
+@using Sam530.Components.Shared
 @using DataStore.Models
 @using DataStore
 
+<ProtectedPage>
 <h3>Syslog Configuration</h3>
 <div class="col-6">
     <EditForm Model="@syslogSettings" OnValidSubmit="SaveSettings" FormName="Syslog">
@@ -62,7 +63,7 @@
 {
     <div class="alert alert-danger mt-3">@errorMessage</div>
 }
-
+</ProtectedPage>
 
 @code {
     private DataStore.DbStore Store = new DbStore();

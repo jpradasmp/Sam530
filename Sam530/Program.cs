@@ -4,8 +4,9 @@ using NLog;
 using NLog.Web;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
-
-
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using static System.Net.Mime.MediaTypeNames;
+using Microsoft.AspNetCore.Builder;
 
 
 // Early init of NLog to allow startup and exception logging, before host is built
@@ -19,17 +20,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+
 builder.Services.AddHttpContextAccessor();
 
-// Autenticación por cookies
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/login";
-        options.LogoutPath = "/logout";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(20); // Ajusta la duración aquí
-        options.SlidingExpiration = true;
-    });
 
 builder.Services.AddAuthorizationCore();
 
@@ -39,6 +32,8 @@ builder.Host.UseNLog();
 
 //Services
 
+builder.Services.AddScoped<UserSessionService>();
+builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddSingleton<GenIOBridge>();
 builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<GenIOBridge>());
 builder.Services.AddSingleton<SyslogService>();
@@ -50,13 +45,12 @@ builder.Services.AddSingleton<AppInfoService>();
 builder.Services.AddSingleton<ShutdownService>();
 
 
+
 var app = builder.Build();
 
 app.MapGet("/health", () => Results.Ok("Alive"));
 
-// Middleware
-app.UseAuthentication();
-app.UseAuthorization();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

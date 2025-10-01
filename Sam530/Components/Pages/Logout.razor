@@ -1,14 +1,22 @@
 ﻿@page "/logout"
-@inject Sam530.Services.RadiusService AuthService
+@rendermode InteractiveServer
+@using Sam530.Services
+
 @inject NavigationManager Navigation
+@inject UserSessionService Session
 
 <h3>Saliendo...</h3>
 
 @code {
-    protected override async Task OnInitializedAsync()
+    private bool _done = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await Task.Yield();
-        await Task.Run(() => AuthService.Logout());
-        Navigation.NavigateTo("/login", true);
+        if (firstRender && !_done)
+        {
+            await Session.LogoutAsync();
+            _done = true;
+            Navigation.NavigateTo("/login");
+        }
     }
 }

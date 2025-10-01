@@ -1,10 +1,13 @@
-﻿@attribute [Authorize]
-@page "/radius"
+﻿@page "/radius"
+
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
+@using Sam530.Components.Shared
 @using DataStore.Models
 @using DataStore
 
+
+<ProtectedPage>
 <h3>Radius Configuration</h3>
 <div class="col-6">
     <EditForm Model="@radiusSettings" OnValidSubmit="SaveSettings" FormName="Radius">
@@ -58,7 +61,7 @@
 {
     <div class="alert alert-danger mt-3">@errorMessage</div>
 }
-
+</ProtectedPage>
 
 @code {
     private DataStore.DbStore Store = new DbStore();

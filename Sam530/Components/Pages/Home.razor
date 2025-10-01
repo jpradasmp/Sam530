@@ -1,40 +1,46 @@
-﻿@attribute [Authorize]
-@page "/"
+﻿@page "/"
 @rendermode InteractiveServer
 @using System.Net
 @using System.ComponentModel.DataAnnotations
 @using DataStore
 @using Sam530Core
+@using Sam530.Services
+@using Sam530.Components.Shared
+@inject NavigationManager Navigation
+@inject UserSessionService Session
 
-<h3>Network Setup</h3>
-<div class="col-6">
-    <EditForm Model="@networkSettings" OnValidSubmit="SaveSettings" FormName="Network">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+<ProtectedPage>
+    <h3>Network Setup</h3>
+    <div class="col-6">
+        <EditForm Model="@networkSettings" OnValidSubmit="SaveSettings" FormName="Network">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-        <div class="form-group">
-            <label>IP Address</label>
-            <InputText id="ipAddress" class="form-control" @bind-Value="networkSettings!.IpAddress" />
-            <ValidationMessage For="@(() => networkSettings.IpAddress)" />
-        </div>
+            <div class="form-group">
+                <label>IP Address</label>
+                <InputText id="ipAddress" class="form-control" @bind-Value="networkSettings!.IpAddress" />
+                <ValidationMessage For="@(() => networkSettings.IpAddress)" />
+            </div>
 
-        <div class="form-group">
-            <label>Subnet Mask</label>
-            <InputText id="subnetMask" class="form-control" @bind-Value="networkSettings.SubnetMask" />
-            <ValidationMessage For="@(() => networkSettings.SubnetMask)" />
-        </div>
+            <div class="form-group">
+                <label>Subnet Mask</label>
+                <InputText id="subnetMask" class="form-control" @bind-Value="networkSettings.SubnetMask" />
+                <ValidationMessage For="@(() => networkSettings.SubnetMask)" />
+            </div>
 
-        <div class="form-group">
-            <label>Gateway</label>
-            <InputText id="gateway" class="form-control" @bind-Value="networkSettings.Gateway" />
-            <ValidationMessage For="@(() => networkSettings.Gateway)" />
-        </div>
+            <div class="form-group">
+                <label>Gateway</label>
+                <InputText id="gateway" class="form-control" @bind-Value="networkSettings.Gateway" />
+                <ValidationMessage For="@(() => networkSettings.Gateway)" />
+            </div>
 
-        <div style="margin-top:10px">
-            <button type="submit" class="btn btn-primary">Save</button>
-        </div>
-    </EditForm>
-</div>
+            <div style="margin-top:10px">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </EditForm>
+    </div>
+
+
 
 @if (successMessage != null)
 {
@@ -46,15 +52,18 @@
     <div class="alert alert-danger mt-3">@errorMessage</div>
 }
 
+</ProtectedPage>
+
 @code {
     private DataStore.DbStore Store = new DbStore();
     private DataStore.Models.Setups? networkSettings;
     private string? successMessage;
     private string? errorMessage;
+    private bool isLoaded = false;
 
     protected override async Task OnInitializedAsync()
     {
-        networkSettings = await Store.GetSetupAsync(1);
+            networkSettings = await Store.GetSetupAsync(1);
     }
 
 
@@ -79,7 +88,6 @@
     {
         return IPAddress.TryParse(ipAddress, out _);
     }
-    
-
+        
 }
 
